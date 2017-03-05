@@ -2,7 +2,9 @@ import maeden.GridClient;
 import maeden.SensoryPacket;
 
 public class MaedenClient implements Runnable {
+
     private GridClient gc;
+
     public MaedenClient() {
         gc = new GridClient("localhost",7237);
     }
@@ -22,6 +24,15 @@ public class MaedenClient implements Runnable {
             //act
             gc.effectorSend(action);
         }
+    }
+
+
+    public class Point {
+        //cartesian point for grid
+        public int x, y;
+        //change to individual classes if we end up using that, string for now
+        public String object;
+
     }
 
 }
