@@ -6,9 +6,11 @@ import maeden.SensoryPacket;
 public class MaedenClient implements Runnable {
 
     private GridClient gc;
+    private static char direction;
 
     public MaedenClient() {
         gc = new GridClient("localhost",7237);
+        direction = 'w';
     }
 
     public static void main(String[] args){
@@ -30,6 +32,10 @@ public class MaedenClient implements Runnable {
             gc.effectorSend(action);
         }
 
+    }
+
+    public static char getDirection(){
+        return direction;
     }
 
 

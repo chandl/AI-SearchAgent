@@ -17,4 +17,8 @@ public class MaedenLog {
     public void debug(Object callingClass, String message){
         System.out.println(String.format("[DEBUG][%s] %s", callingClass.getClass().getSimpleName(), message));
     }
+
+    public void error(Object callingClass, String message){
+        System.err.println(String.format("[ERROR][%s] %s", callingClass.getClass().getSimpleName(), message));
+    }
 }
