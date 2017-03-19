@@ -16,13 +16,13 @@ public class MaedenClient implements Runnable {
     public void run(){
         while(true){
             //sense
-            SensoryPacket sp = gc.getSensoryPacket();
+            SensoryPacket sp = gc.getSensoryPacket( );
 
             //think
-            String action = think(sp);
+            //String action = think(sp);
 
             //act
-            gc.effectorSend(action);
+            //gc.effectorSend(action);
         }
     }
 
