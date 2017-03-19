@@ -23,13 +23,14 @@ public class MaedenClient implements Runnable {
 
         while(true){
             //sense
-            SensoryPacket sp = gc.getSensoryPacket();
+            SensoryPacket sp = gc.getSensoryPacket( );
 
             //think
             String action = react.think(sp);
 
+
             //act
-            gc.effectorSend(action);
+            //gc.effectorSend(action);
         }
 
     }
