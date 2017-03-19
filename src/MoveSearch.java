@@ -19,6 +19,9 @@ public class MoveSearch {
     private Point goalPoint;
     private int totalPoints;
 
+    private static final int TURN_COST    = 3;
+    private static final int MOVE_COST    = 5;
+    private static final int PICKUP_COST  = 2;
 
     /**
      * Instantiate a MoveSearch.
@@ -35,6 +38,7 @@ public class MoveSearch {
         this.totalPoints = 1;
     }
 
+    public MoveSearch() {}
 
     /**
      *  A* Search - Return the Best Move Sequence from a Starting Point to an Ending Point
@@ -48,12 +52,12 @@ public class MoveSearch {
         Comparator<Point> pointComparator = new Point.PointComparator();
         PriorityQueue<Point> openSet = new PriorityQueue<Point>(totalPoints, pointComparator);
 
-        openSet.add(startPoint);
-
         initDistances(startPoint);
 
         startPoint.setDistFromSource(0);
         startPoint.setCostToDest(heuristic(startPoint, goalPoint));
+
+        openSet.add(startPoint);
 
         Point current;
         while(openSet.peek() != null){
@@ -209,6 +213,7 @@ public class MoveSearch {
      */
     private void initDistances(Point start){
         for(Point adjacent : searchGraph.adjList.get(start) ){
+            if(adjacent.getDistFromSource() == Integer.MAX_VALUE){continue;} //prevent from initializing again
             adjacent.setDistFromSource(Integer.MAX_VALUE);
             adjacent.setCostToDest(Integer.MAX_VALUE);
             this.totalPoints++;
@@ -221,26 +226,35 @@ public class MoveSearch {
      *
      * This changes based on the Object in the Points.
      *
-     * @param a
-     * @param b
+     * @param a The starting point
+     * @param b The destination point
      * @return
      */
     private int getCostToMove(Point a, Point b){
+
+        //Different costs depending on the destination point
+        switch(b.object){
+
+        }
+
+        //Calculate total cost to move to Point B
+        //  -Add cost to turn & move forward
+        //  -Get facing direction
+
         //TODO implement distance function
         return 0;
     }
 
     /**
      * The Heuristic Evaluation function to get from {@link Point} A to B.
+     *  (Using Distance Formula for a Straight-Line heuristic)
      *
-     * @param a
-     * @param b
-     * @return
+     * @param a The starting point
+     * @param b The destination point
+     * @return The straight-line distance between {@link Point} A and B.
      */
-    public int heuristic(Point a, Point b){
-        //TODO implement heuristic function
-        //Maybe use a straight-line heuristic function?
-        return 0;
+    public double heuristic(Point a, Point b){
+        return Math.sqrt( Math.pow((a.x - b.x), 2) + Math.pow((a.y - b.y), 2) );
     }
 
 }

@@ -1,4 +1,4 @@
-import maeden.*;
+import helper.MaedenLog;
 import logic.ReactiveLogic;
 import maeden.GridClient;
 import maeden.SensoryPacket;

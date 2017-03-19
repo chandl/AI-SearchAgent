@@ -4,6 +4,11 @@ import java.util.Comparator;
  * Created by andres on 3/11/17.
  */
 public class Point implements Comparable{
+    public Point(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
+
     //cartesian point for grid
     public int x, y;
     //change to individual classes if we end up using that, string for now
@@ -12,15 +17,15 @@ public class Point implements Comparable{
     //distance from starting Point (for A*)
     private int distFromSource;
     //Total cost of getting from the Starting Point to the goal Point by passing through this Point. (A*)
-    private int costToDest;
+    private double costToDest;
     //Previous point in path (A*)
     private Point previous;
 
     //Getters & Setters
     public int getDistFromSource() {return distFromSource;}
     public void setDistFromSource(int distFromSource) {this.distFromSource = distFromSource;}
-    public int getCostToDest() {return costToDest;}
-    public void setCostToDest(int costToDest) {this.costToDest = costToDest;}
+    public double getCostToDest() {return costToDest;}
+    public void setCostToDest(double costToDest) {this.costToDest = costToDest;}
     public Point getPrevious() {return previous;}
     public void setPrevious(Point previous) {this.previous = previous;}
 
