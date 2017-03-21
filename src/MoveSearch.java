@@ -21,7 +21,123 @@ public class MoveSearch {
 
     private static final int TURN_COST    = 3;
     private static final int MOVE_COST    = 5;
+    private static final int OBSTACLE_COST= 10;
+    private static final int USE_COST     = 10;
     private static final int PICKUP_COST  = 2;
+    private static final int DROP_COST    = 1;
+
+
+    public static void main(String[] args){
+        String map =
+                "*************************\n" +
+                "*           *           *\n" +
+                "*           *           *\n" +
+                "*           *           *\n" +
+                "*           *           *\n" +
+                "*           *           *\n" +
+                "*        1  * +         *\n" +
+                "*         T *           *\n" +
+                "*           *****@*******\n" +
+                "*           *           *\n" +
+                "*           *           *\n" +
+                "*           *           *\n" +
+                "*           *           *\n" +
+                "*           =           *\n" +
+                "*           *          T*\n" +
+                "*************************";
+        String[] map2 = map.split("\n");
+
+
+        char[][] mapChars = new char[map2.length][map2[0].length()];
+
+        for(int i=0; i<map2.length; i++){
+            System.out.println(map2[i]);
+            mapChars[i] = map2[i].toCharArray();
+        }
+
+        GraphTest gtest = GraphTest.instance;
+        gtest.init(mapChars);
+
+        for(Map.Entry<Point, HashSet<Point>> entry : gtest.adjList.entrySet()){
+            System.out.print(String.format("\nPoint (%s, %s). Adj: ", entry.getKey().x, entry.getKey().y  ));
+            entry.getValue().stream().forEach(System.out::print);
+        }
+
+
+    }
+
+    private static class GraphTest{
+        Point origin;
+        HashMap<Point, HashSet<Point>> adjList;
+        Point[][] internalMap;
+
+        static GraphTest instance;
+        static{
+            instance = new GraphTest();
+        }
+        private GraphTest(){
+            origin = new Point(0,0,null);
+            adjList = new HashMap<>();
+        }
+
+        protected void init(char[][] map){
+            internalMap = new Point[map.length][map[0].length];
+            initMap(map);
+            initAdjacent(origin);
+        }
+
+        private void initMap(char[][] map){
+            for(int i=0; i<map.length; i++){
+                for(int j=0; j<map[0].length; j++){
+                    if(map[i][j] == '*'){
+                        internalMap[i][j] = null;
+                        continue;
+                    }
+
+                    internalMap[i][j] = new Point(i, j, new Vector<>(map[i][j]));
+
+                    if(map[i][j] == '1'){
+                        origin = new Point(i,j,new Vector<>(map[i][j]));
+                    }
+                }
+            }
+        }
+
+        private void initAdjacent(Point start){
+            if(start == null){return;}
+            if(adjList.get(start) != null){return;}
+
+            HashSet<Point> adjacentSet = new HashSet<>();
+            adjList.put(start, adjacentSet);
+
+            //init left
+            if(start.x - 1 >= 0){
+                adjacentSet.add(internalMap[start.x -1][start.y]);
+                initAdjacent(internalMap[start.x -1][start.y]);
+            }
+
+            //init right
+            if(start.x + 1 < internalMap.length){
+                adjacentSet.add(internalMap[start.x + 1][start.y]);
+                initAdjacent(internalMap[start.x + 1][start.y]);
+            }
+
+            //init top
+            if(start.y - 1 >= 0){
+                adjacentSet.add(internalMap[start.x][start.y-1]);
+                initAdjacent(internalMap[start.x][start.y-1]);
+            }
+
+            //init down
+            if(start.y + 1 < internalMap[0].length){
+                adjacentSet.add(internalMap[start.x][start.y + 1]);
+                initAdjacent(internalMap[start.x][start.y+1]);
+            }
+        }
+
+    }
+
+
 
     /**
      * Instantiate a MoveSearch.
@@ -47,7 +163,7 @@ public class MoveSearch {
      *
      * @return a {@link MoveSequence} to get from the starting {@link Point} to the ending {@link Point} on a {@link Mapped.Graph}
      */
-    private MoveSequence AStar(){
+    public MoveSequence AStar(){
         List<Point> closedSet = new ArrayList<>();
         Comparator<Point> pointComparator = new Point.PointComparator();
         PriorityQueue<Point> openSet = new PriorityQueue<Point>(totalPoints, pointComparator);
@@ -60,18 +176,21 @@ public class MoveSearch {
         openSet.add(startPoint);
 
         Point current;
+
+        char direction = MaedenClient.getDirection();
         while(openSet.peek() != null){
             current = openSet.poll();
             if(current.equals(goalPoint)){
-                return reconstructPath(current);
+                return reconstructPath(current, direction);
             }
 
             closedSet.add(current);
 
-            for(Point neighbor : getNeighbors(current)){
+
+            for(Point neighbor : searchGraph.getNeighbors(current)){
                 if(closedSet.contains(neighbor)){continue;}
 
-                int tentativeCost = current.getDistFromSource() + getCostToMove(current, neighbor);
+                int tentativeCost = current.getDistFromSource() + getCostToMove(current, neighbor, isFacing(current, neighbor, current.facing));
 
                 if(!openSet.contains(neighbor)){
                     openSet.add(neighbor);
@@ -88,6 +207,35 @@ public class MoveSearch {
         return null;
     }
 
+    public char getDirection(Point a, Point b) {
+        if(a.x > b.x){
+            return 'w';
+        }else if(a.x < b.x){
+            return 'e';
+        }
+
+        if(a.y > b.y){
+            return 'n';
+        }else if(a.y < b.y){
+            return 's';
+        }
+
+        return ' ';
+    }
+
+    public boolean isFacing(Point a, Point b, char direction){
+        if(a.x > b.x){ //a to the right
+            if(direction == 'e' || direction == 'w') return true;
+            else return false;
+        }
+
+        if(a.y > b.y){ //a below
+            if(direction == 'n' || direction == 's') return true;
+            else return false;
+        }
+        return false;
+    }
+
     /**
      * Reconstructs a path found from {@see AStar()}.
      *
@@ -100,10 +248,10 @@ public class MoveSearch {
      * @param end The last {@link Point} in the path. (The goal)
      * @return A {@link MoveSequence} that describes the moves needed by Maeden to get from the starting to ending {@link Point}.
      */
-    private MoveSequence reconstructPath(Point end){
+    private MoveSequence reconstructPath(Point end, char direction){
         StringBuilder sb = new StringBuilder();
         Stack<Point> moveSequence = new Stack<>();
-        char direction = MaedenClient.getDirection();
+
 
         //Add points to the sequence of Points
         Point current = end;
@@ -192,15 +340,15 @@ public class MoveSearch {
         return new MoveSequence(sb.toString());
     }
 
-    /**
-     * Gets the adjacent {@link Point}s of the specified point.
-     *
-     * @param p The {@link Point} to analyze.
-     * @return A {@link List} of {@link Point}s that are adjacent to p.
-     */
-    private List<Point> getNeighbors(Point p){
-        return searchGraph.adjList.get(p);
-    }
+//    /**
+//     * Gets the adjacent {@link Point}s of the specified point.
+//     *
+//     * @param p The {@link Point} to analyze.
+//     * @return A {@link List} of {@link Point}s that are adjacent to p.
+//     */
+//    private List<Point> getNeighbors(Point p){
+//        return searchGraph.adjList.get(p);
+//    }
 
     /**
      * Initializes {@link Point} instance variables according to A* algorithm {@see AStar()}
@@ -217,6 +365,7 @@ public class MoveSearch {
             adjacent.setDistFromSource(Integer.MAX_VALUE);
             adjacent.setCostToDest(Integer.MAX_VALUE);
             this.totalPoints++;
+            adjacent.facing = getDirection(start, adjacent);
             initDistances(adjacent);
         }
     }
@@ -230,19 +379,23 @@ public class MoveSearch {
      * @param b The destination point
      * @return
      */
-    private int getCostToMove(Point a, Point b){
+    private int getCostToMove(Point a, Point b, boolean facing){
 
-        //Different costs depending on the destination point
-        switch(b.object){
-
+        for(char type : b.getPointType()){
+            switch(type){
+                case ' ':
+                    return facing? MOVE_COST : TURN_COST + MOVE_COST;
+                case '=':
+                case '@':
+                    return facing? OBSTACLE_COST + USE_COST : TURN_COST + OBSTACLE_COST + USE_COST;
+                case 'k':
+                case '+':
+                default:
+                    return facing? MOVE_COST + PICKUP_COST : TURN_COST + MOVE_COST + PICKUP_COST;
+            }
         }
 
-        //Calculate total cost to move to Point B
-        //  -Add cost to turn & move forward
-        //  -Get facing direction
-
-        //TODO implement distance function
-        return 0;
+        return Integer.MIN_VALUE;//this shouldn't happen
     }
 
     /**

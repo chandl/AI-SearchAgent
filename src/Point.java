@@ -47,16 +47,21 @@ public class Point implements Comparable{
     }
 
 
-    public String toString(){
-        return "xy: "+x+" " + y +"  type: "+type.toString();
-    }
+//    public String toString(){
+//        return "xy: "+x+" " + y +"  type: "+type.toString();
+//    }
 
+    public String toString(){
+        return "Point ("+x+", "+y+") ";
+    }
     //distance from starting Point (for A*)
     private int distFromSource;
     //Total cost of getting from the Starting Point to the goal Point by passing through this Point. (A*)
     private double costToDest;
     //Previous point in path (A*)
     private Point previous;
+    //for A*
+    public char facing;
 
     //Getters & Setters
     public int getDistFromSource() {return distFromSource;}
@@ -65,6 +70,7 @@ public class Point implements Comparable{
     public void setCostToDest(double costToDest) {this.costToDest = costToDest;}
     public Point getPrevious() {return previous;}
     public void setPrevious(Point previous) {this.previous = previous;}
+
 
     @Override
     public int compareTo(Object o) {

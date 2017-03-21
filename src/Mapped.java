@@ -18,14 +18,12 @@ public class Mapped {
     public char getFacing() {
 
         return facing;
-
     }
 
-    //get an origins point neighbors as an array
+    //get any points neighbors as an array
 
-    public List<Point> getNeighbors(int x, int y) {
-
-        List<Point> list = Arrays.asList((Point[]) known.adjList.get(new Point(1,2,null)).toArray());
+    public List<Point> getNeighbors(Point p) {
+        List<Point> list = Arrays.asList((Point[]) known.adjList.get(new Point(p.x,p.y,null)).toArray());
         return list;
     }
 
@@ -122,6 +120,7 @@ public class Mapped {
 
         return SingleMap.SINGLETON;
     }
+
     char getDirection (char to) {
         switch (facing) {
             case 'n' : {
@@ -196,12 +195,12 @@ public class Mapped {
                 if (!view.get(x).get(y).contains('*')) {
                    // System.out.println(view.get(x).get(y).firstElement());
                     grid.add(new Point(x,y,view.get(x).get(y)));
-                    
+
                 }
             }
         }
 
-        
+
         if(empty) {
 //
 
