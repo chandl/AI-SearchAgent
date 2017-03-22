@@ -78,8 +78,8 @@ public class MoveSearch {
         while(openSet.peek() != null){
             current = openSet.poll();
             if(current.equals(goalPoint)){
-//                return reconstructPath(current, direction);
-                return reconstructPath(current, 'w');
+                return reconstructPath(current, direction);
+//                return reconstructPath(current, 'w');
             }
 
             closedSet.add(current);
