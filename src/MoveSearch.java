@@ -14,7 +14,8 @@ import java.util.*;
  */
 public class MoveSearch {
     private MaedenLog log = MaedenLog.getInstance();
-    private Mapped.Graph searchGraph;
+//    private Mapped.Graph searchGraph;
+    private GraphTest searchGraph;
     private Point startPoint;
     private Point goalPoint;
     private int totalPoints;
@@ -58,18 +59,32 @@ public class MoveSearch {
         GraphTest gtest = GraphTest.instance;
         gtest.init(mapChars);
 
-        for(Map.Entry<Point, HashSet<Point>> entry : gtest.adjList.entrySet()){
+        System.out.println("Origin: " + gtest.origin);
+
+        //Print out every point and their adjacent points
+        /*for(Map.Entry<Point, HashSet<Point>> entry : gtest.adjList.entrySet()){
             System.out.print(String.format("\nPoint (%s, %s). Adj: ", entry.getKey().x, entry.getKey().y  ));
             entry.getValue().stream().forEach(System.out::print);
+        }*/
+
+        MoveSearch ms = new MoveSearch(gtest.origin, gtest.dest, null);
+        MoveSequence seq = ms.AStar();
+
+        while(seq.movesLeft()){
+            System.out.println("Move: "+ seq.nextMove());
         }
+
+        ms.printPath(gtest.dest, mapChars);
 
 
     }
 
     private static class GraphTest{
-        Point origin;
+        Point origin, dest;
         HashMap<Point, HashSet<Point>> adjList;
         Point[][] internalMap;
+
+        int destX = 1, destY= 1;
 
         static GraphTest instance;
         static{
@@ -96,8 +111,10 @@ public class MoveSearch {
 
                     internalMap[i][j] = new Point(i, j, new Vector<>(map[i][j]));
 
+                    if(i == destX && j == destY){dest = internalMap[i][j];}
+
                     if(map[i][j] == '1'){
-                        origin = new Point(i,j,new Vector<>(map[i][j]));
+                        origin = internalMap[i][j];
                     }
                 }
             }
@@ -135,9 +152,15 @@ public class MoveSearch {
             }
         }
 
+        protected List<Point> getNeighbors(Point p){
+            ArrayList<Point> out = new ArrayList<>();
+            for(Point p1 : adjList.get(p)){
+                if(p1 != null) out.add(p1);
+            }
+            return out;
+        }
+
     }
-
-
 
     /**
      * Instantiate a MoveSearch.
@@ -148,10 +171,35 @@ public class MoveSearch {
      * @param graph The {@link Mapped.Graph} to traverse.
      */
     public MoveSearch(Point start, Point goal, Mapped.Graph graph) {
-        this.searchGraph = graph;
+//        this.searchGraph = graph;
+        this.searchGraph = GraphTest.instance;
         this.startPoint = start;
         this.goalPoint = goal;
         this.totalPoints = 1;
+    }
+
+    private void printPath(Point end, char[][] map){
+        char[][] mapCopy = new char[map.length][map[0].length];
+        for(int i=0; i<map.length; i++){
+            mapCopy[i] = map[i].clone();
+        }
+        mapCopy[startPoint.x][startPoint.y] = 'X';
+        mapCopy[goalPoint.x][goalPoint.y] = 'X';
+
+        Stack<Point> path = reversePath(end);
+        path.pop();//remove first
+        Point p;
+        while(path.size() > 1){
+
+            p = path.pop();
+            System.out.println("Adding New Path Point ("+(p.x)+", "+(p.y)+")");
+            mapCopy[p.x][p.y] = '.';
+        }
+        path.clear();
+
+        for(int i=0; i<map.length; i++){
+            System.out.println(new String(mapCopy[i]));
+        }
     }
 
     public MoveSearch() {}
@@ -181,7 +229,8 @@ public class MoveSearch {
         while(openSet.peek() != null){
             current = openSet.poll();
             if(current.equals(goalPoint)){
-                return reconstructPath(current, direction);
+//                return reconstructPath(current, direction);
+                return reconstructPath(current, 'w');
             }
 
             closedSet.add(current);
@@ -236,6 +285,19 @@ public class MoveSearch {
         return false;
     }
 
+    private Stack<Point> reversePath(Point end){
+        Stack<Point> moveSequence = new Stack<>();
+
+
+        //Add points to the sequence of Points
+        Point current = end;
+        while(current != null){
+            moveSequence.push(current);
+            current = current.getPrevious();
+        }
+        return moveSequence;
+    }
+
     /**
      * Reconstructs a path found from {@see AStar()}.
      *
@@ -250,88 +312,82 @@ public class MoveSearch {
      */
     private MoveSequence reconstructPath(Point end, char direction){
         StringBuilder sb = new StringBuilder();
-        Stack<Point> moveSequence = new Stack<>();
-
-
-        //Add points to the sequence of Points
+        Stack<Point> moveSequence = reversePath(end);
         Point current = end;
-        while(current != null){
-            moveSequence.push(current);
-            current = current.getPrevious();
-        }
 
         //Goes from the start point to the end point, creating a sequence of moves to send.
         Point next;
-        for(int i=0; i<moveSequence.size()-1; i++){
+        while(moveSequence.size() > 1){
             current = moveSequence.pop();
             next = moveSequence.peek();
 
-            if(current.x > next.x){ //Move to the West
+            if(current.x < next.x){ //Move to the South
+
                 switch(direction){
                     case 'n':
-                        sb.append("lf");
-                        direction = 'w';
+                        sb.append('b');
                         break;
                     case 'e':
-                        sb.append("b");
+                        sb.append("rf");
+                        direction = 's';
                         break;
                     case 's':
-                        sb.append("rf");
-                        direction = 'w';
+                        sb.append('f');
                         break;
                     case 'w':
+                        sb.append("lf");
+                        direction = 's';
+                        break;
+                }
+            } else if(current.x > next.x){ //Move to the North
+                switch(direction){
+                    case 'n':
+                        sb.append('f');
+                        break;
+                    case 'e':
+                        sb.append("lf");
+                        direction = 'n';
+                        break;
+                    case 's':
+                        sb.append('b');
+                        break;
+                    case 'w':
+                        sb.append("rf");
+                        direction = 'n';
+                        break;
+                }
+            } else if(current.y < next.y){ //Move to the East
+                switch(direction){
+                    case 'n':
+                        sb.append("rf");
+                        direction = 'e';
+                        break;
+                    case 'e':
                         sb.append("f");
                         break;
-                }
-            } else if(current.x < next.x){ //Move to the East
-                switch(direction){
-                    case 'n':
-                        sb.append("rf");
-                        direction = 'e';
-                        break;
-                    case 'e':
-                        sb.append('f');
-                        break;
                     case 's':
                         sb.append("lf");
                         direction = 'e';
                         break;
                     case 'w':
-                        sb.append('b');
+                        sb.append("b");
                         break;
                 }
-            } else if(current.y > next.y){ //Move North
+            } else if(current.y > next.y){ //Move to the West
                 switch(direction){
                     case 'n':
-                        sb.append('f');
+                        sb.append("lf");
+                        direction = 'w';
                         break;
                     case 'e':
-                        sb.append("lf");
-                        direction = 'n';
+                        sb.append('b');
                         break;
                     case 's':
-                        sb.append('b');
+                        sb.append("rf");
+                        direction = 'w';
                         break;
                     case 'w':
-                        sb.append("rf");
-                        direction = 'n';
-                        break;
-                }
-            } else if(current.y < next.y){ //Move South
-                switch(direction){
-                    case 'n':
-                        sb.append('b');
-                        break;
-                    case 'e':
-                        sb.append("rf");
-                        direction = 's';
-                        break;
-                    case 's':
                         sb.append('f');
-                        break;
-                    case 'w':
-                        sb.append("lf");
-                        direction = 's';
                         break;
                 }
             }
@@ -361,7 +417,7 @@ public class MoveSearch {
      */
     private void initDistances(Point start){
         for(Point adjacent : searchGraph.adjList.get(start) ){
-            if(adjacent.getDistFromSource() == Integer.MAX_VALUE){continue;} //prevent from initializing again
+            if(adjacent == null || adjacent.getDistFromSource() == Integer.MAX_VALUE){continue;} //prevent from initializing again
             adjacent.setDistFromSource(Integer.MAX_VALUE);
             adjacent.setCostToDest(Integer.MAX_VALUE);
             this.totalPoints++;
