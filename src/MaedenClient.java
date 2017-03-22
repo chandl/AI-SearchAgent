@@ -18,6 +18,7 @@ public class MaedenClient implements Runnable {
         MaedenClient client = new MaedenClient();
         map = Mapped.getInstance();
         sm = StateMachine.getInstance();
+        sm.currentState = StateMachine.State.LOOKFOOD;
 
         //TODO Get Mapped working.
 
@@ -77,11 +78,8 @@ public class MaedenClient implements Runnable {
 
     }
 
-
-
     public static char getDirection(){
         return direction;
     }
-
 
 }

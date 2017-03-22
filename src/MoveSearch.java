@@ -11,8 +11,8 @@ import java.util.*;
  *         3/11/2017
  */
 public class MoveSearch {
-    private Mapped.Graph searchGraph;
-//    private GraphTest searchGraph;
+    private Mapped.Graph mappedGraph;
+    private ViewGraph searchGraph;
     private Point startPoint;
     private Point goalPoint;
     private int totalPoints;
@@ -32,8 +32,15 @@ public class MoveSearch {
      * @param graph The {@link Mapped.Graph} to traverse.
      */
     public MoveSearch(Point start, Point goal, Mapped.Graph graph) {
+        this.mappedGraph = graph;
+//        this.mappedGraph = ViewGraph.instance;
+        this.startPoint = start;
+        this.goalPoint = goal;
+        this.totalPoints = 1;
+    }
+    public MoveSearch(Point start, Point goal, ViewGraph graph) {
         this.searchGraph = graph;
-//        this.searchGraph = GraphTest.instance;
+        this.mappedGraph = null;
         this.startPoint = start;
         this.goalPoint = goal;
         this.totalPoints = 1;
@@ -50,9 +57,9 @@ public class MoveSearch {
      */
     public MoveSequence AStar(){
         //If we haven't explored this part of the map or an invalid Point was supplied
-//        if(searchGraph.adjList.get(startPoint) == null || searchGraph.adjList.get(goalPoint) == null) {
-//            return null;
-//        }
+        if(mappedGraph != null && (mappedGraph.adjList.get(startPoint) == null || mappedGraph.adjList.get(goalPoint) == null)) {
+            return null;
+        }
 
         List<Point> closedSet = new ArrayList<>();
         Comparator<Point> pointComparator = new Point.PointComparator();
@@ -78,7 +85,7 @@ public class MoveSearch {
             closedSet.add(current);
 
 
-            for(Point neighbor : searchGraph.getNeighbors(current)){
+            for(Point neighbor : (mappedGraph==null)? searchGraph.getNeighbors(current):mappedGraph.getNeighbors(current)){
                 if(closedSet.contains(neighbor)){continue;}
                 int tentativeCost = current.getDistFromSource() + getCostToMove(current, neighbor, isFacing(current, neighbor, getDirection(current, neighbor)));
 
@@ -262,13 +269,13 @@ public class MoveSearch {
             for(char type : next.getPointType()){
                 if(type == '#' ){     //Door
                     sequence.setDoorObstacle(next);
-                    System.out.println("Found Door Obstacle: "+next);
+//                    System.out.println("Found Door Obstacle: "+next);
                 }else if(type == '@'){//rock
                     sequence.setRockObstacle(next);
-                    System.out.println("Found Rock Obstacle: "+next);
+//                    System.out.println("Found Rock Obstacle: "+next);
                 }else if(type == '='){//narrows
                     sequence.setNarrowsObstacle(next);
-                    System.out.println("Found Narrows Obstacle: "+next);
+//                    System.out.println("Found Narrows Obstacle: "+next);
                 }
             }
 
@@ -287,7 +294,7 @@ public class MoveSearch {
      * @param start
      */
     private void initDistances(Point start){
-        for(Point adjacent : searchGraph.adjList.get(start) ){
+        for(Point adjacent : (mappedGraph==null)? searchGraph.adjList.get(start):mappedGraph.adjList.get(start) ){
             if(adjacent == null || adjacent.getDistFromSource() == Integer.MAX_VALUE){continue;} //prevent from initializing again
             adjacent.setDistFromSource(Integer.MAX_VALUE);
             adjacent.setCostToDest(Integer.MAX_VALUE);
@@ -371,7 +378,7 @@ public class MoveSearch {
             mapChars[i] = map2[i].toCharArray();
         }
 
-        GraphTest gtest = GraphTest.instance;
+        ViewGraph gtest = ViewGraph.instance;
         gtest.init(mapChars);
 
         System.out.println("Origin: " + gtest.origin +"\nDestination: "+gtest.dest);
@@ -382,8 +389,8 @@ public class MoveSearch {
             entry.getValue().stream().forEach(System.out::print);
         }*/
 
-        MoveSearch ms = new MoveSearch(gtest.origin, gtest.dest, null);
-        MoveSequence seq = ms.AStar();
+//        MoveSearch ms = new MoveSearch(gtest.origin, gtest.dest, null);
+//        MoveSequence seq = ms.AStar();
 
 
         //Print out the move sequence
@@ -399,21 +406,27 @@ public class MoveSearch {
     /**
      * A testing Graph class for A* Search.
      */
-    private static class GraphTest{
+    public static class ViewGraph {
         Point origin, dest;
         HashMap<Point, HashSet<Point>> adjList;
         Point[][] internalMap;
 
         //These are the destination coordinates.
-        int destX = 6, destY= 14;
+        private int destX = 0, destY = 0;
 
-        static GraphTest instance;
+        static ViewGraph instance;
         static{
-            instance = new GraphTest();
+            instance = new ViewGraph();
         }
-        private GraphTest(){
+        private ViewGraph(){
             origin = new Point(0,0,null);
             adjList = new HashMap<>();
+        }
+        public ViewGraph(Point dest){
+            origin = new Point(0,0,null);
+            adjList = new HashMap<>();
+            destX = dest.x;
+            destY = dest.y;
         }
 
         //Initialize the Graph, creating an internal map & creating adjacency list.
@@ -437,7 +450,7 @@ public class MoveSearch {
                     internalMap[i][j] = new Point(i, j, type);
                     if(i == destX && j == destY){dest = internalMap[i][j];}
 
-                    if(map[i][j] == '1'){
+                    if(map[i][j] == '0'){
                         origin = internalMap[i][j];
                     }
                 }
@@ -445,7 +458,7 @@ public class MoveSearch {
         }
 
         private void initAdjacent(Point start){
-            if(start == null){return;}
+            if(start == null || adjList == null){return;}
             if(adjList.get(start) != null){return;}
 
             HashSet<Point> adjacentSet = new HashSet<>();

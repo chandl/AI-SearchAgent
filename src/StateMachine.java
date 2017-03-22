@@ -14,7 +14,9 @@
  -BREAK_ROCK
  **/
 
+import java.util.ArrayList;
 import java.util.Stack;
+import java.util.Vector;
 
 /**
 Enum constants are implicitly public, static and final.
@@ -64,12 +66,56 @@ public class StateMachine {
 
     private StateMachine(){}
 
+    public char[][] convertSensesToBoard(ArrayList<ArrayList<Vector<Character>>> visual){
+//        ArrayList<ArrayList<Vector<Character>>> visualArray = sp.getVisualArray();
+        char[][] out = new char[visual.size()][visual.get(0).size()];
+
+        int i=0, j=0;
+        for(ArrayList<Vector<Character>> al : visual){
+            j=0;
+            for(Vector<Character> v : al){
+                if(v.size() > 0){
+                    if(v.get(0) == '0' && v.size() > 1){
+                        out[i][j] =  v.get(1);
+                    }else{
+                        out[i][j] = v.get(0);
+                    }
+                }
+
+                j++;
+            }
+            i++;
+        }
+
+        return out;
+    }
+
+    private MoveSequence searchVisual(char[][] board, char object){
+        Point dest = null;
+        Point origin = null;
+        for(int i=0; i<board.length; i++){
+            for(int j=0; j<board[i].length; j++){
+                if(board[i][j] == object){
+                    dest = new Point(i,j, new Vector<>(object));
+                }
+                if(board[i][j] == '0'){
+                    origin = new Point(i,j, new Vector<>('0'));
+                }
+            }
+        }
+        MoveSearch.ViewGraph graph = new MoveSearch.ViewGraph(dest);
+        graph.init(board);
+
+        MoveSearch search = new MoveSearch(origin, dest, graph);
+        return search.AStar();
+    }
+
     //sp: current sensory packet
     //Point...: Starting & Ending points (if applicable)
     public MoveSequence stateAction(maeden.SensoryPacket sp, Point... points) {
 
         //we are trying to navigate to a specific point
-        if(points[0] != null){
+        if(points.length > 0){
             search = new MoveSearch(points[0], points[1], Mapped.getInstance().known);//start, goal, graph
             MoveSequence moves = search.AStar();
 
@@ -112,23 +158,33 @@ public class StateMachine {
         //TODO in order for this to work, we need to keep track of where the agent is in the Mapped.Graph
         switch (currentState) {
             case EXPLORE://Make one move towards the frontier
-                MoveSequence sequence = explore.think(sp);
+                MoveSequence sequence = explore.think(sp);//change to explore.think if Mapped.Graph logic is put in place.
                 currentState = goal.pop();//go to the previous state
                 return sequence;
 
             case LOOKFOOD:
-                //IF Last action wasn't failure, go REACTIVE. FALLBACK if we can't get other stuff working in time
-                if(!sp.getLastActionStatus()){
-                    return reactive.think(sp);
+
+                if(sp.getGroundContents().contains('+')){
+                    return new MoveSequence("gu");
                 }
 
                 //Look for food in sensory packet after reactive search.
                 //TODO keep track of food location in Mapped
                 for(String s : sp.getRawSenseData()){
-                    if(s.contains("+")){//we found food somewhere!
+                    if(s.contains("\"+\"")){//we found food somewhere!
                         goal.push(State.LOOKFOOD);
-                        return stateAction(sp, startPoint, endPoint);
+                        sequence = searchVisual(convertSensesToBoard(sp.getVisualArray()), '+');
+//                        System.out.println("New sequence!");
+                        if(sequence.movesLeft()){}//no moves found
+                        else return sequence;
+
+//                        return stateAction(sp, startPoint, endPoint);
                     }
+                }
+
+                //IF Last action wasn't failure, go REACTIVE. FALLBACK if we can't get other stuff working in time
+                if(sp.getLastActionStatus()){
+                    return reactive.think(sp);
                 }
 
                 //ELSE ->
@@ -152,13 +208,13 @@ public class StateMachine {
 
             case OBSTACLENARROWS:
                 currentState = State.NAVIGATENARROWS;
-                return stateAction(sp, startPoint, lastNarrowsObstacle.pop());
+//                return stateAction(sp, startPoint, lastNarrowsObstacle.pop());
 
             case OBSTACLEROCK:
                 //if they have a hammer, go to the rock
                 if(sp.getInventory().contains('T')){
                     currentState = State.BREAKROCK;
-                    return stateAction( sp, startPoint, lastRockObstacle.pop());
+//                    return stateAction( sp, startPoint, lastRockObstacle.pop());
                 }else{ //set state to LOOKHAMMER
                     currentState = State.LOOKHAMMER;
                     return stateAction( sp);
@@ -169,10 +225,13 @@ public class StateMachine {
             case LOOKKEY:
 
                 for(String s : sp.getRawSenseData()){//WILL CHECK Mapped.Graph instead.
-                    if(s.contains("k")){
+                    if(s.contains("\"k\"")){
                         //MoveSearch to this location. We need to figure out what it is on the Mapped.Graph first
                         goal.push(State.LOOKKEY);
-                        return stateAction(sp, startPoint, endPoint);
+                        sequence = searchVisual(convertSensesToBoard(sp.getVisualArray()), 'k');
+                        if(sequence.movesLeft()){}//no moves found
+                        else return sequence;
+//                        return stateAction(sp, startPoint, endPoint);
                     }
                 }
 
@@ -183,10 +242,13 @@ public class StateMachine {
 
             case LOOKHAMMER:
                 for(String s : sp.getRawSenseData()){//WILL CHECK Mapped.Graph instead.
-                    if(s.contains("T")){
+                    if(s.contains("\"T\"")){
                         //MoveSearch to this location. We need to figure out what it is on the Mapped.Graph first
                         goal.push(State.LOOKHAMMER);
-                        return stateAction(sp, startPoint, endPoint);
+                        sequence = searchVisual(convertSensesToBoard(sp.getVisualArray()), 'T');
+                        if(sequence.movesLeft()){}//no moves found
+                        else return sequence;
+//                        return stateAction(sp, startPoint, endPoint);
                     }
                 }
 
