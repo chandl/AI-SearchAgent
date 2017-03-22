@@ -25,8 +25,6 @@ public class MoveSearch {
     private static final int OBSTACLE_COST= 10;
     private static final int USE_COST     = 10;
     private static final int PICKUP_COST  = 2;
-    private static final int DROP_COST    = 1;
-
 
     /**
      * Instantiate a MoveSearch.
@@ -54,6 +52,11 @@ public class MoveSearch {
      * @return a {@link MoveSequence} to get from the starting {@link Point} to the ending {@link Point} on a {@link Mapped.Graph}
      */
     public MoveSequence AStar(){
+        //If we haven't explored this part of the map or an invalid Point was supplied
+//        if(searchGraph.adjList.get(startPoint) == null || searchGraph.adjList.get(goalPoint) == null) {
+//            return null;
+//        }
+
         List<Point> closedSet = new ArrayList<>();
         Comparator<Point> pointComparator = new Point.PointComparator();
         PriorityQueue<Point> openSet = new PriorityQueue<Point>(totalPoints, pointComparator);
@@ -98,7 +101,7 @@ public class MoveSearch {
             }
         }
 
-        return null;
+        return null;//no path found
     }
 
     /**
@@ -180,6 +183,7 @@ public class MoveSearch {
         StringBuilder sb = new StringBuilder();
         Stack<Point> moveSequence = reversePath(end);
         Point current;
+        MoveSequence sequence = new MoveSequence();
 
         //Goes from the start point to the end point, creating a sequence of moves to send.
         Point next;
@@ -257,9 +261,23 @@ public class MoveSearch {
                         break;
                 }
             }
-        }
 
-        return new MoveSequence(sb.toString());
+            for(char type : next.getPointType()){
+                if(type == '#' ){     //Door
+                    sequence.setDoorObstacle(next);
+                    System.out.println("Found Door Obstacle: "+next);
+                }else if(type == '@'){//rock
+                    sequence.setRockObstacle(next);
+                    System.out.println("Found Rock Obstacle: "+next);
+                }else if(type == '='){//narrows
+                    sequence.setNarrowsObstacle(next);
+                    System.out.println("Found Narrows Obstacle: "+next);
+                }
+            }
+
+        }
+        sequence.addSequence(sb.toString());
+        return sequence;
     }
 
     /**
@@ -297,8 +315,9 @@ public class MoveSearch {
             switch(type){
                 case ' ':
                     return facing? MOVE_COST : TURN_COST + MOVE_COST;
-                case '=':
+                case '#':
                 case '@':
+                case '=':
                     return facing? OBSTACLE_COST + USE_COST : TURN_COST + OBSTACLE_COST + USE_COST;
                 case 'k':
                 case '+':
@@ -417,8 +436,8 @@ public class MoveSearch {
 
                     Vector<Character> type = new Vector<>();
                     type.add(map[i][j]);
-                    internalMap[i][j] = new Point(i, j, type);
 
+                    internalMap[i][j] = new Point(i, j, type);
                     if(i == destX && j == destY){dest = internalMap[i][j];}
 
                     if(map[i][j] == '1'){

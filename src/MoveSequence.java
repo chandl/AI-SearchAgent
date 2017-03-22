@@ -2,27 +2,28 @@ import java.util.Stack;
 
 public class MoveSequence {
     Stack<Character> moves;
-    private boolean doorObstacle = false;
-    private boolean narrowsObstacle = false;
-    private boolean rockObstacle = false;
+    private Point doorObstacle = null;
+    private Point narrowsObstacle = null;
+    private Point rockObstacle = null;
+
+    public MoveSequence(){}
 
     public MoveSequence(String sequence){
-        moves = new Stack<>();
+        moves = reverseSequence(sequence);
+    }
+
+    private Stack<Character> reverseSequence(String sequence){
+        Stack<Character> moves = new Stack<>();
 
         for(int i=sequence.length() - 1; i>=0; i--){
-            switch(sequence.charAt(i)){
-                case 'r':
-                    rockObstacle = true;
-                    break;
-                case 'n':
-                    narrowsObstacle = true;
-                    break;
-                case 'd':
-                    doorObstacle = true;
-                    break;
-            }
             moves.push(sequence.charAt(i));
         }
+
+        return moves;
+    }
+
+    public void addSequence(String sequence){
+        moves = reverseSequence(sequence);
     }
 
     public void addMove(char move){
@@ -30,18 +31,31 @@ public class MoveSequence {
     }
 
     public void removeLastMove(){
-        moves.remove(moves.size()-1);
+        moves.remove(0);
     }
-    public boolean isDoorObstacle() {
+
+    public Point getDoorObstacle() {
         return doorObstacle;
     }
 
-    public boolean isNarrowsObstacle() {
+    public void setDoorObstacle(Point doorObstacle) {
+        this.doorObstacle = doorObstacle;
+    }
+
+    public Point getNarrowsObstacle() {
         return narrowsObstacle;
     }
 
-    public boolean isRockObstacle() {
+    public void setNarrowsObstacle(Point narrowsObstacle) {
+        this.narrowsObstacle = narrowsObstacle;
+    }
+
+    public Point getRockObstacle() {
         return rockObstacle;
+    }
+
+    public void setRockObstacle(Point rockObstacle) {
+        this.rockObstacle = rockObstacle;
     }
 
     public String nextMove(){

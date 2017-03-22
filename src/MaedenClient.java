@@ -6,6 +6,7 @@ public class MaedenClient implements Runnable {
     private GridClient gc;
     private static char direction;
     private static Mapped map;
+    private static StateMachine sm;
 
 
     public MaedenClient() {
@@ -16,24 +17,26 @@ public class MaedenClient implements Runnable {
     public static void main(String[] args){
         MaedenClient client = new MaedenClient();
         map = Mapped.getInstance();
+        sm = StateMachine.getInstance();
+
+        //TODO Get Mapped working.
 
         client.run();
     }
 
     public void run(){
-        StateMachine sm = StateMachine.getInstance();
-
+        SensoryPacket sp;
+        MoveSequence actions;
+        String cmd;
 
         while(true){
-
             //sense
-            SensoryPacket sp = gc.getSensoryPacket();
+            sp = gc.getSensoryPacket();
 
             //think
-            MoveSequence actions = sm.stateAction(sp);
+            actions = sm.stateAction(sp);
 
             //act
-            String cmd;
             while(actions.movesLeft()){
                 cmd = actions.nextMove();
                 if(cmd.equals("r")){

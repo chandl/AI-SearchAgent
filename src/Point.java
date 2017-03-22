@@ -17,7 +17,8 @@ public class Point implements Comparable{
     public Vector<Character> type;
 
     public Point (int x, int y, Vector<Character> object) {
-        this.x = x; this.y = y; this.type = new Vector<Character>();
+        this.x = x; this.y = y;
+        this.type = object==null ? new Vector<>() : object;
     }
 
     @Override

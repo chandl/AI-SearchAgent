@@ -31,7 +31,8 @@ public class StateMachine {
         LOOKFOOD, FOUNDFOOD,
         OBSTACLEDOOR, LOOKKEY, OPENDOOR,
         OBSTACLENARROWS, NAVIGATENARROWS,
-        OBSTACLEROCK, LOOKHAMMER, BREAKROCK
+        OBSTACLEROCK, LOOKHAMMER, BREAKROCK,
+            EXPLORE
     }
 
     private static ReactiveLogic reactive = new ReactiveLogic();
@@ -54,23 +55,26 @@ public class StateMachine {
     //sp: current sensory packet
     //Point...: Starting & Ending points (if applicable)
     public MoveSequence stateAction(maeden.SensoryPacket sp, Point... points) {
+
         if(points[0] != null){//we are trying to navigate to a specific point
             search = new MoveSearch(points[0], points[1], Mapped.getInstance().known);//start, goal, graph
             MoveSequence moves = search.AStar();
 
             if(moves == null){ //no path found, need to explore the frontier
-
+                currentState = State.EXPLORE;
+                moves = stateAction(sp);
+                //TODO try to navigate to a random? section at end of the Known map
             }
 
-            if(moves.isDoorObstacle()){
+            if(moves.getDoorObstacle() != null ){
                 currentState = State.OBSTACLEDOOR;
-                moves = stateAction(sp, points[0], points[1]);
-            }else if(moves.isNarrowsObstacle()){
+                moves = stateAction(sp);
+            }else if(moves.getNarrowsObstacle() != null ) {
                 currentState = State.OBSTACLENARROWS;
-                moves = stateAction(sp, points[0], points[1]);
-            }else if(moves.isRockObstacle()){
+                moves = stateAction(sp);
+            }else if(moves.getRockObstacle() != null ){
                 currentState = State.OBSTACLEROCK;
-                moves = stateAction(sp, points[0], points[1]);
+                moves = stateAction(sp);
             }
 
             return moves;
