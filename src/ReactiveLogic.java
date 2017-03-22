@@ -94,8 +94,6 @@ public class ReactiveLogic extends AgentLogic {
             }
         }
 
-        log.info(this, "Action: "+action);
-
         return new MoveSequence(action);
     }
 

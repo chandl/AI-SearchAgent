@@ -1,5 +1,3 @@
-import helper.MaedenLog;
-
 import java.util.*;
 
 /**
@@ -13,7 +11,6 @@ import java.util.*;
  *         3/11/2017
  */
 public class MoveSearch {
-    private MaedenLog log = MaedenLog.getInstance();
     private Mapped.Graph searchGraph;
 //    private GraphTest searchGraph;
     private Point startPoint;
