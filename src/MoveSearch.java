@@ -59,7 +59,7 @@ public class MoveSearch {
         GraphTest gtest = GraphTest.instance;
         gtest.init(mapChars);
 
-        System.out.println("Origin: " + gtest.origin);
+        System.out.println("Origin: " + gtest.origin +"\nDestination: "+gtest.dest);
 
         //Print out every point and their adjacent points
         /*for(Map.Entry<Point, HashSet<Point>> entry : gtest.adjList.entrySet()){
@@ -70,10 +70,13 @@ public class MoveSearch {
         MoveSearch ms = new MoveSearch(gtest.origin, gtest.dest, null);
         MoveSequence seq = ms.AStar();
 
-        while(seq.movesLeft()){
+
+        //Print out the move sequence
+         while(seq.movesLeft()){
             System.out.println("Move: "+ seq.nextMove());
         }
 
+        //Print the generated path
         ms.printPath(gtest.dest, mapChars);
 
 
@@ -109,7 +112,9 @@ public class MoveSearch {
                         continue;
                     }
 
-                    internalMap[i][j] = new Point(i, j, new Vector<>(map[i][j]));
+                    Vector<Character> type = new Vector<>();
+                    type.add(map[i][j]);
+                    internalMap[i][j] = new Point(i, j, type);
 
                     if(i == destX && j == destY){dest = internalMap[i][j];}
 
@@ -190,10 +195,9 @@ public class MoveSearch {
         path.pop();//remove first
         Point p;
         while(path.size() > 1){
-
             p = path.pop();
-            System.out.println("Adding New Path Point ("+(p.x)+", "+(p.y)+")");
             mapCopy[p.x][p.y] = '.';
+            System.out.println(String.format("New Path Point: %s. Dist From Source: %d. Cost to Dest: %f. Direction: %c", p, p.getDistFromSource(), p.getCostToDest(), p.facing));
         }
         path.clear();
 
@@ -238,8 +242,7 @@ public class MoveSearch {
 
             for(Point neighbor : searchGraph.getNeighbors(current)){
                 if(closedSet.contains(neighbor)){continue;}
-
-                int tentativeCost = current.getDistFromSource() + getCostToMove(current, neighbor, isFacing(current, neighbor, current.facing));
+                int tentativeCost = current.getDistFromSource() + getCostToMove(current, neighbor, isFacing(current, neighbor, getDirection(current, neighbor)));
 
                 if(!openSet.contains(neighbor)){
                     openSet.add(neighbor);
@@ -249,45 +252,51 @@ public class MoveSearch {
 
                 neighbor.setPrevious(current);
                 neighbor.setDistFromSource(tentativeCost);
-                neighbor.setCostToDest(tentativeCost + heuristic(neighbor, goalPoint));
+                double heuristic = heuristic(neighbor, goalPoint);
+                neighbor.setCostToDest(tentativeCost + heuristic);
+                System.out.println(String.format("A* Path Point: From:%s to %s. Dist From Source: %d. Heuristic: %f. Direction: %c", current, neighbor, neighbor.getDistFromSource(), heuristic, neighbor.facing));
             }
         }
 
         return null;
     }
 
+    //returns the direction needed to go to get from point a to b
     public char getDirection(Point a, Point b) {
-        if(a.x > b.x){
-            return 'w';
-        }else if(a.x < b.x){
-            return 'e';
-        }
-
-        if(a.y > b.y){
+        if(a.x > b.x){//A is below
             return 'n';
-        }else if(a.y < b.y){
+        }else if(a.x < b.x){//A is above
             return 's';
         }
 
-        return ' ';
+        if(a.y > b.y){//A is to the right
+            return 'l';
+        }else if(a.y < b.y){//A is to the left
+            return 'r';
+        }
+
+        return 'w';
     }
 
     public boolean isFacing(Point a, Point b, char direction){
-        if(a.x > b.x){ //a to the right
-            if(direction == 'e' || direction == 'w') return true;
-            else return false;
-        }
+        if(a.x != b.x){ //above or below
 
-        if(a.y > b.y){ //a below
             if(direction == 'n' || direction == 's') return true;
             else return false;
+
+        }
+
+        if(a.y != b.y){ //to the east or west
+
+            if(direction == 'r' || direction == 'l') return true;
+            else return false;
+
         }
         return false;
     }
 
     private Stack<Point> reversePath(Point end){
         Stack<Point> moveSequence = new Stack<>();
-
 
         //Add points to the sequence of Points
         Point current = end;
@@ -313,7 +322,7 @@ public class MoveSearch {
     private MoveSequence reconstructPath(Point end, char direction){
         StringBuilder sb = new StringBuilder();
         Stack<Point> moveSequence = reversePath(end);
-        Point current = end;
+        Point current;
 
         //Goes from the start point to the end point, creating a sequence of moves to send.
         Point next;
@@ -449,6 +458,10 @@ public class MoveSearch {
                 default:
                     return facing? MOVE_COST + PICKUP_COST : TURN_COST + MOVE_COST + PICKUP_COST;
             }
+        }
+
+        if(b.getPointType().size() == 0){
+            return facing? MOVE_COST : TURN_COST + MOVE_COST;
         }
 
         return Integer.MIN_VALUE;//this shouldn't happen
