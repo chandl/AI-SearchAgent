@@ -1,5 +1,3 @@
-package logic;
-
 import maeden.SensoryPacket;
 
 import java.util.ArrayList;
@@ -10,7 +8,7 @@ import java.util.Vector;
  * Code recycled from the 1st Maeden Lab.
  * @author Chandler Severson
  */
-public class ReactiveLogic extends AgentLogic{
+public class ReactiveLogic extends AgentLogic {
 
     /**
      * Checks if there is a wall in the specified direction
@@ -54,7 +52,7 @@ public class ReactiveLogic extends AgentLogic{
     }
 
     @Override
-    public String think(SensoryPacket sp) {
+    public MoveSequence think(SensoryPacket sp) {
         String action = "";
 
         //Check if we have food in our inventory
@@ -98,7 +96,7 @@ public class ReactiveLogic extends AgentLogic{
 
         log.info(this, "Action: "+action);
 
-        return action;
+        return new MoveSequence(action);
     }
 
 }

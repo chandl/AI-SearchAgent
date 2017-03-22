@@ -14,8 +14,8 @@ import java.util.*;
  */
 public class MoveSearch {
     private MaedenLog log = MaedenLog.getInstance();
-//    private Mapped.Graph searchGraph;
-    private GraphTest searchGraph;
+    private Mapped.Graph searchGraph;
+//    private GraphTest searchGraph;
     private Point startPoint;
     private Point goalPoint;
     private int totalPoints;
@@ -35,8 +35,8 @@ public class MoveSearch {
      * @param graph The {@link Mapped.Graph} to traverse.
      */
     public MoveSearch(Point start, Point goal, Mapped.Graph graph) {
-//        this.searchGraph = graph;
-        this.searchGraph = GraphTest.instance;
+        this.searchGraph = graph;
+//        this.searchGraph = GraphTest.instance;
         this.startPoint = start;
         this.goalPoint = goal;
         this.totalPoints = 1;
@@ -111,7 +111,7 @@ public class MoveSearch {
      * @param b
      * @return 'n, s, l, r' (north, south, left, right)
      */
-    public char getDirection(Point a, Point b) {
+    public static char getDirection(Point a, Point b) {
         if(a.x > b.x){//A is below
             return 'n';
         }else if(a.x < b.x){//A is above
