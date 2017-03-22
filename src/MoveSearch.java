@@ -72,98 +72,12 @@ public class MoveSearch {
 
 
         //Print out the move sequence
-         while(seq.movesLeft()){
+        /*while(seq.movesLeft()){
             System.out.println("Move: "+ seq.nextMove());
-        }
+        }*/
 
         //Print the generated path
         ms.printPath(gtest.dest, mapChars);
-
-
-    }
-
-    private static class GraphTest{
-        Point origin, dest;
-        HashMap<Point, HashSet<Point>> adjList;
-        Point[][] internalMap;
-
-        int destX = 1, destY= 1;
-
-        static GraphTest instance;
-        static{
-            instance = new GraphTest();
-        }
-        private GraphTest(){
-            origin = new Point(0,0,null);
-            adjList = new HashMap<>();
-        }
-
-        protected void init(char[][] map){
-            internalMap = new Point[map.length][map[0].length];
-            initMap(map);
-            initAdjacent(origin);
-        }
-
-        private void initMap(char[][] map){
-            for(int i=0; i<map.length; i++){
-                for(int j=0; j<map[0].length; j++){
-                    if(map[i][j] == '*'){
-                        internalMap[i][j] = null;
-                        continue;
-                    }
-
-                    Vector<Character> type = new Vector<>();
-                    type.add(map[i][j]);
-                    internalMap[i][j] = new Point(i, j, type);
-
-                    if(i == destX && j == destY){dest = internalMap[i][j];}
-
-                    if(map[i][j] == '1'){
-                        origin = internalMap[i][j];
-                    }
-                }
-            }
-        }
-
-        private void initAdjacent(Point start){
-            if(start == null){return;}
-            if(adjList.get(start) != null){return;}
-
-            HashSet<Point> adjacentSet = new HashSet<>();
-            adjList.put(start, adjacentSet);
-
-            //init left
-            if(start.x - 1 >= 0){
-                adjacentSet.add(internalMap[start.x -1][start.y]);
-                initAdjacent(internalMap[start.x -1][start.y]);
-            }
-
-            //init right
-            if(start.x + 1 < internalMap.length){
-                adjacentSet.add(internalMap[start.x + 1][start.y]);
-                initAdjacent(internalMap[start.x + 1][start.y]);
-            }
-
-            //init top
-            if(start.y - 1 >= 0){
-                adjacentSet.add(internalMap[start.x][start.y-1]);
-                initAdjacent(internalMap[start.x][start.y-1]);
-            }
-
-            //init down
-            if(start.y + 1 < internalMap[0].length){
-                adjacentSet.add(internalMap[start.x][start.y + 1]);
-                initAdjacent(internalMap[start.x][start.y+1]);
-            }
-        }
-
-        protected List<Point> getNeighbors(Point p){
-            ArrayList<Point> out = new ArrayList<>();
-            for(Point p1 : adjList.get(p)){
-                if(p1 != null) out.add(p1);
-            }
-            return out;
-        }
 
     }
 
@@ -197,7 +111,9 @@ public class MoveSearch {
         while(path.size() > 1){
             p = path.pop();
             mapCopy[p.x][p.y] = '.';
-            System.out.println(String.format("New Path Point: %s. Dist From Source: %d. Cost to Dest: %f. Direction: %c", p, p.getDistFromSource(), p.getCostToDest(), p.facing));
+
+            //Print out info about new path point.
+            //System.out.println(String.format("New Path Point: %s. Dist From Source: %d. Cost to Dest: %f. Direction: %c", p, p.getDistFromSource(), p.getCostToDest(), p.facing));
         }
         path.clear();
 
@@ -254,14 +170,22 @@ public class MoveSearch {
                 neighbor.setDistFromSource(tentativeCost);
                 double heuristic = heuristic(neighbor, goalPoint);
                 neighbor.setCostToDest(tentativeCost + heuristic);
-                System.out.println(String.format("A* Path Point: From:%s to %s. Dist From Source: %d. Heuristic: %f. Direction: %c", current, neighbor, neighbor.getDistFromSource(), heuristic, neighbor.facing));
+
+                //Print out possible paths to take
+                //System.out.println(String.format("A* Path Point: From:%s to %s. Dist From Source: %d. Heuristic: %f. Direction: %c", current, neighbor, neighbor.getDistFromSource(), heuristic, neighbor.facing));
             }
         }
 
         return null;
     }
 
-    //returns the direction needed to go to get from point a to b
+    /**
+     * Gets the direction necessary to get to Point B from Point A.
+     *
+     * @param a
+     * @param b
+     * @return 'n, s, l, r' (north, south, left, right)
+     */
     public char getDirection(Point a, Point b) {
         if(a.x > b.x){//A is below
             return 'n';
@@ -275,26 +199,37 @@ public class MoveSearch {
             return 'r';
         }
 
-        return 'w';
+        return ' ';//this shouldn't happen
     }
 
+    /**
+     * Checks if you are facing Point B from Point A.
+     * @param a
+     * @param b
+     * @param direction 'l, r, n, s' (left, right, north, south)
+     * @return
+     */
     public boolean isFacing(Point a, Point b, char direction){
         if(a.x != b.x){ //above or below
-
             if(direction == 'n' || direction == 's') return true;
             else return false;
-
         }
 
         if(a.y != b.y){ //to the east or west
-
             if(direction == 'r' || direction == 'l') return true;
             else return false;
-
         }
         return false;
     }
 
+    /**
+     * Reverses a path made from A* into a stack.
+     *
+     * <p>(So we can go from the starting point to ending point, instead of the other way around)</p>
+     *
+     * @param end
+     * @return
+     */
     private Stack<Point> reversePath(Point end){
         Stack<Point> moveSequence = new Stack<>();
 
@@ -405,16 +340,6 @@ public class MoveSearch {
         return new MoveSequence(sb.toString());
     }
 
-//    /**
-//     * Gets the adjacent {@link Point}s of the specified point.
-//     *
-//     * @param p The {@link Point} to analyze.
-//     * @return A {@link List} of {@link Point}s that are adjacent to p.
-//     */
-//    private List<Point> getNeighbors(Point p){
-//        return searchGraph.adjList.get(p);
-//    }
-
     /**
      * Initializes {@link Point} instance variables according to A* algorithm {@see AStar()}
      *
@@ -479,4 +404,95 @@ public class MoveSearch {
         return Math.sqrt( Math.pow((a.x - b.x), 2) + Math.pow((a.y - b.y), 2) );
     }
 
+
+    /**
+     * A testing Graph class for A* Search.
+     */
+    private static class GraphTest{
+        Point origin, dest;
+        HashMap<Point, HashSet<Point>> adjList;
+        Point[][] internalMap;
+
+        //These are the destination coordinates.
+        int destX = 6, destY= 14;
+
+        static GraphTest instance;
+        static{
+            instance = new GraphTest();
+        }
+        private GraphTest(){
+            origin = new Point(0,0,null);
+            adjList = new HashMap<>();
+        }
+
+        //Initialize the Graph, creating an internal map & creating adjacency list.
+        protected void init(char[][] map){
+            internalMap = new Point[map.length][map[0].length];
+            initMap(map);
+            initAdjacent(origin);
+        }
+
+        private void initMap(char[][] map){
+            for(int i=0; i<map.length; i++){
+                for(int j=0; j<map[0].length; j++){
+                    if(map[i][j] == '*'){
+                        internalMap[i][j] = null;
+                        continue;
+                    }
+
+                    Vector<Character> type = new Vector<>();
+                    type.add(map[i][j]);
+                    internalMap[i][j] = new Point(i, j, type);
+
+                    if(i == destX && j == destY){dest = internalMap[i][j];}
+
+                    if(map[i][j] == '1'){
+                        origin = internalMap[i][j];
+                    }
+                }
+            }
+        }
+
+        private void initAdjacent(Point start){
+            if(start == null){return;}
+            if(adjList.get(start) != null){return;}
+
+            HashSet<Point> adjacentSet = new HashSet<>();
+            adjList.put(start, adjacentSet);
+
+            //init left
+            if(start.x - 1 >= 0){
+                adjacentSet.add(internalMap[start.x -1][start.y]);
+                initAdjacent(internalMap[start.x -1][start.y]);
+            }
+
+            //init right
+            if(start.x + 1 < internalMap.length){
+                adjacentSet.add(internalMap[start.x + 1][start.y]);
+                initAdjacent(internalMap[start.x + 1][start.y]);
+            }
+
+            //init top
+            if(start.y - 1 >= 0){
+                adjacentSet.add(internalMap[start.x][start.y-1]);
+                initAdjacent(internalMap[start.x][start.y-1]);
+            }
+
+            //init down
+            if(start.y + 1 < internalMap[0].length){
+                adjacentSet.add(internalMap[start.x][start.y + 1]);
+                initAdjacent(internalMap[start.x][start.y+1]);
+            }
+        }
+
+        //returns the direct (n,s,e,w) neighbors of a Point, p
+        protected List<Point> getNeighbors(Point p){
+            ArrayList<Point> out = new ArrayList<>();
+            for(Point p1 : adjList.get(p)){
+                if(p1 != null) out.add(p1);
+            }
+            return out;
+        }
+
+    }
 }
