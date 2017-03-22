@@ -1,6 +1,10 @@
 import maeden.GridClient;
 import maeden.SensoryPacket;
 
+/**
+ * MaedenClient - Main class.
+ * @author Chandler, Dawn, & Andres
+ */
 public class MaedenClient implements Runnable {
 
     private GridClient gc;

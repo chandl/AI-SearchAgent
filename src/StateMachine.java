@@ -1,7 +1,4 @@
 /**
- * Created by Dawn on 3/10/2017.
- */
-/**
  States - represent with stack:
  -LOOKING_FOOD
  -OBJECT_SEEN (subgoal to pick it up)
@@ -24,6 +21,8 @@ Enums are easy to read and the compiler can catch errors.
 Fixed set of constants.
 State Blip: Occasionally it will be convenient for an agent to enter a state with the condition that when
 the state is exited, the agent returns to its previous state. This behavior is called a state blip.
+
+ @author Chandler & Dawn
 **/
 
 public class StateMachine {

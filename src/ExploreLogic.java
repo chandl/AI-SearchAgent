@@ -3,6 +3,7 @@ import maeden.SensoryPacket;
 
 /**
  * Agent that goes in a random direction to explore.
+ * @author Chandler
  */
 public class ExploreLogic extends AgentLogic {
 

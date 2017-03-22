@@ -1,5 +1,9 @@
 import java.util.Stack;
 
+/**
+ * MoveSequence - Represents a sequence of moves.
+ * @author Chandler
+ */
 public class MoveSequence {
     Stack<Character> moves;
     private Point doorObstacle = null;
