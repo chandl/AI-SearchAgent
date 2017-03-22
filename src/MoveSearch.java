@@ -28,59 +28,6 @@ public class MoveSearch {
     private static final int DROP_COST    = 1;
 
 
-    public static void main(String[] args){
-        String map =
-                "*************************\n" +
-                "*           *           *\n" +
-                "*           *           *\n" +
-                "*           *           *\n" +
-                "*           *           *\n" +
-                "*           *           *\n" +
-                "*        1  * +         *\n" +
-                "*         T *           *\n" +
-                "*           *****@*******\n" +
-                "*           *           *\n" +
-                "*           *           *\n" +
-                "*           *           *\n" +
-                "*           *           *\n" +
-                "*           =           *\n" +
-                "*           *          T*\n" +
-                "*************************";
-        String[] map2 = map.split("\n");
-
-
-        char[][] mapChars = new char[map2.length][map2[0].length()];
-
-        for(int i=0; i<map2.length; i++){
-            System.out.println(map2[i]);
-            mapChars[i] = map2[i].toCharArray();
-        }
-
-        GraphTest gtest = GraphTest.instance;
-        gtest.init(mapChars);
-
-        System.out.println("Origin: " + gtest.origin +"\nDestination: "+gtest.dest);
-
-        //Print out every point and their adjacent points
-        /*for(Map.Entry<Point, HashSet<Point>> entry : gtest.adjList.entrySet()){
-            System.out.print(String.format("\nPoint (%s, %s). Adj: ", entry.getKey().x, entry.getKey().y  ));
-            entry.getValue().stream().forEach(System.out::print);
-        }*/
-
-        MoveSearch ms = new MoveSearch(gtest.origin, gtest.dest, null);
-        MoveSequence seq = ms.AStar();
-
-
-        //Print out the move sequence
-        /*while(seq.movesLeft()){
-            System.out.println("Move: "+ seq.nextMove());
-        }*/
-
-        //Print the generated path
-        ms.printPath(gtest.dest, mapChars);
-
-    }
-
     /**
      * Instantiate a MoveSearch.
      * Find the best path with {@see AStar()}
@@ -95,31 +42,6 @@ public class MoveSearch {
         this.startPoint = start;
         this.goalPoint = goal;
         this.totalPoints = 1;
-    }
-
-    private void printPath(Point end, char[][] map){
-        char[][] mapCopy = new char[map.length][map[0].length];
-        for(int i=0; i<map.length; i++){
-            mapCopy[i] = map[i].clone();
-        }
-        mapCopy[startPoint.x][startPoint.y] = 'X';
-        mapCopy[goalPoint.x][goalPoint.y] = 'X';
-
-        Stack<Point> path = reversePath(end);
-        path.pop();//remove first
-        Point p;
-        while(path.size() > 1){
-            p = path.pop();
-            mapCopy[p.x][p.y] = '.';
-
-            //Print out info about new path point.
-            //System.out.println(String.format("New Path Point: %s. Dist From Source: %d. Cost to Dest: %f. Direction: %c", p, p.getDistFromSource(), p.getCostToDest(), p.facing));
-        }
-        path.clear();
-
-        for(int i=0; i<map.length; i++){
-            System.out.println(new String(mapCopy[i]));
-        }
     }
 
     public MoveSearch() {}
@@ -230,7 +152,7 @@ public class MoveSearch {
      * @param end
      * @return
      */
-    private Stack<Point> reversePath(Point end){
+    private static Stack<Point> reversePath(Point end){
         Stack<Point> moveSequence = new Stack<>();
 
         //Add points to the sequence of Points
@@ -405,6 +327,59 @@ public class MoveSearch {
     }
 
 
+    public static void main(String[] args){
+        String map =
+                "*************************\n" +
+                        "*           *           *\n" +
+                        "*           *           *\n" +
+                        "*           *           *\n" +
+                        "*           *           *\n" +
+                        "*           *           *\n" +
+                        "*        1  * +         *\n" +
+                        "*         T *           *\n" +
+                        "*           *****@*******\n" +
+                        "*           *           *\n" +
+                        "*           *           *\n" +
+                        "*           *           *\n" +
+                        "*           *           *\n" +
+                        "*           =           *\n" +
+                        "*           *          T*\n" +
+                        "*************************";
+        String[] map2 = map.split("\n");
+
+
+        char[][] mapChars = new char[map2.length][map2[0].length()];
+
+        for(int i=0; i<map2.length; i++){
+            System.out.println(map2[i]);
+            mapChars[i] = map2[i].toCharArray();
+        }
+
+        GraphTest gtest = GraphTest.instance;
+        gtest.init(mapChars);
+
+        System.out.println("Origin: " + gtest.origin +"\nDestination: "+gtest.dest);
+
+        //Print out every point and their adjacent points
+        /*for(Map.Entry<Point, HashSet<Point>> entry : gtest.adjList.entrySet()){
+            System.out.print(String.format("\nPoint (%s, %s). Adj: ", entry.getKey().x, entry.getKey().y  ));
+            entry.getValue().stream().forEach(System.out::print);
+        }*/
+
+        MoveSearch ms = new MoveSearch(gtest.origin, gtest.dest, null);
+        MoveSequence seq = ms.AStar();
+
+
+        //Print out the move sequence
+        /*while(seq.movesLeft()){
+            System.out.println("Move: "+ seq.nextMove());
+        }*/
+
+        //Print the generated path
+        gtest.printPath(mapChars);
+
+    }
+
     /**
      * A testing Graph class for A* Search.
      */
@@ -482,6 +457,32 @@ public class MoveSearch {
             if(start.y + 1 < internalMap[0].length){
                 adjacentSet.add(internalMap[start.x][start.y + 1]);
                 initAdjacent(internalMap[start.x][start.y+1]);
+            }
+        }
+
+
+        private void printPath(char[][] map){
+            char[][] mapCopy = new char[map.length][map[0].length];
+            for(int i=0; i<map.length; i++){
+                mapCopy[i] = map[i].clone();
+            }
+            mapCopy[origin.x][origin.y] = 'X';
+            mapCopy[dest.x][dest.y] = 'X';
+
+            Stack<Point> path = MoveSearch.reversePath(dest);
+            path.pop();//remove first
+            Point p;
+            while(path.size() > 1){
+                p = path.pop();
+                mapCopy[p.x][p.y] = '.';
+
+                //Print out info about new path point.
+                //System.out.println(String.format("New Path Point: %s. Dist From Source: %d. Cost to Dest: %f. Direction: %c", p, p.getDistFromSource(), p.getCostToDest(), p.facing));
+            }
+            path.clear();
+
+            for(int i=0; i<map.length; i++){
+                System.out.println(new String(mapCopy[i]));
             }
         }
 
